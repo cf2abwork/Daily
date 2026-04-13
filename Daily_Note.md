@@ -66,3 +66,8 @@ end
 ```
 
 
+
+![System Architecture Diagram](https://lh3.googleusercontent.com/pw/AP1GczPEpKMTMjmRZcCL1Sah6UEDzjNC44XpqOVHMQKMI089qr_xmz4wLhuwudI2aSwoAw5CFA6xbZvVLMTwCwX9HgH69Qebd-rM8AKOakIwJrZxkKZcVYukK3tCYMOxBhOb0D09c28JJF1lRoc7DGDZehg=w1194-h1162-s-no-gm?authuser=0)
+
+
+
