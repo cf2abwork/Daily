@@ -44,6 +44,8 @@ Please build the application adhering strictly to the following technical requir
 
   \- When speech ends or the user clicks stop, compile the recorded audio chunks into a Blob, generate a temporary object URL, and automatically trigger a client-side file download (.webm or .mp4/audio file).
 
+  \- Use bootstrap5 CSS
+
 \*\*Error Handling & Fallbacks:\*\* Gracefully handle permissions denial (e.g., if user cancels tab audio sharing) with a clear notification message explaining how to retry or use native playback mode.
 
 \#\#\# 3\. Deliverable Format
