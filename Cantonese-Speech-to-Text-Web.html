@@ -144,10 +144,13 @@
             let finalTranscript = ''; // Stores committed sentences
 
             // Initialize Speech Recognition
+			// 取得瀏覽器的語音辨識 API (支援 Chrome, Edge, Safari)
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
             if (!SpeechRecognition) {
+			   // 如果瀏覽器不支援，則顯示紅色的警告訊息 (unsupported-msg)
                 unsupportedMsg.classList.remove('hidden');
+				// 將「開始錄音」按鈕禁用，避免使用者點擊報錯
                 btnStart.disabled = true;
                 btnStart.classList.add('opacity-50', 'cursor-not-allowed');
                 return;
@@ -155,9 +158,12 @@
 
             recognition = new SpeechRecognition();
             // Set language to exact BCP-47 tag for Traditional Cantonese (Hong Kong)
+			// 設定語言為最精確的香港廣東話 BCP-47 代
             recognition.lang = 'yue-Hant-HK'; 
+			// 開啟連續辨識，讓系統不會在使用者停頓喘氣時自動停止錄音
             // Allow continuous recognition (don't stop automatically when user pauses)
             recognition.continuous = true; 
+			// 開啟即時結果，讓使用者講話的當下能立刻看到尚未確認的動態文字
             // Show interim results before sentence is finished
             recognition.interimResults = true; 
 
@@ -168,15 +174,18 @@
                 updateUIState('recording');
             };
 
-            recognition.onresult = (event) => {
-                let interimTranscript = '';
+            recognition.onresult = (event) => { 
+                let interimTranscript = ''; // 用於存放每次講話時尚未確認的「即時動態文字」
 
                 // Loop through results
                 for (let i = event.resultIndex; i < event.results.length; ++i) {
                     if (event.results[i].isFinal) {
                         // Append the text and add two newlines for a paragraph break
+						// 如果這句話已經被系統確認完畢 (isFinal 為 true)
+						// 就把它加入到最終字串，並在句尾加上 '\n\n' 產生兩次換行（自動隔行排版）
                         finalTranscript += event.results[i][0].transcript + '\n\n';
                     } else {
+						// 如果系統還在根據上下文判定中，就先放進即時動態文字中
                         interimTranscript += event.results[i][0].transcript;
                     }
                 }
