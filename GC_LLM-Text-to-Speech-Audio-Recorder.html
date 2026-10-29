@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TTS & Audio Recorder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom scrollbar for text area */
+        textarea::-webkit-scrollbar { width: 8px; }
+        textarea::-webkit-scrollbar-track { background: #f1f1f1; rounded: 4px; }
+        textarea::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        textarea::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex items-center justify-center p-4">
+
+    <div class="bg-white shadow-xl rounded-2xl p-6 md:p-8 w-full max-w-3xl border border-slate-100">
+        <header class="mb-6 border-b border-slate-100 pb-4">
+            <h1 class="text-2xl font-bold text-slate-900">Text-to-Speech & Audio Recorder</h1>
+            <p class="text-sm text-slate-500 mt-1">Convert text to speech and export as local audio.</p>
+        </header>
+
+        <div id="errorBox" class="hidden mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 text-sm rounded-r">
+            <p id="errorMessage"></p>
+        </div>
+
+        <div id="infoBox" class="hidden mb-6 p-4 bg-blue-50 border-l-4 border-blue-500 text-blue-700 text-sm rounded-r">
+            <p id="infoMessage"></p>
+        </div>
+
+        <div class="space-y-6">
+            <!-- Text Input -->
+            <div>
+                <label for="textInput" class="block text-sm font-semibold mb-2">Text to Speak</label>
+                <textarea id="textInput" rows="5" class="w-full p-4 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all resize-y text-base leading-relaxed">這是一段測試語音。我們在此結合了廣東話與國語的常見用語。
+Cantonese and Mandarin mix: 唔該晒，謝謝您的幫忙！
+Life is a journey, enjoy the ride.</textarea>
+            </div>
+
+            <!-- Controls Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                
+                <!-- Voice Selection -->
+                <div class="md:col-span-2">
+                    <label for="langSelect" class="block text-sm font-semibold mb-2">Voice / Language</label>
+                    <select id="langSelect" class="w-full p-2.5 border border-slate-200 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer">
+                        <option value="zh-HK">Cantonese (Hong Kong: zh-HK)</option>
+                        <option value="zh-MO">Cantonese (Macau: zh-MO)</option>
+                        <option value="zh-TW">Mandarin (Taiwan / Traditional Big5: zh-TW)</option>
+                        <option value="zh-CN">Mandarin (Mainland China: zh-CN)</option>
+                        <option value="en-US">US English (en-US)</option>
+                        <option value="en-GB">UK / London English (en-GB)</option>
+                    </select>
+                </div>
+
+                <!-- Rate Slider -->
+                <div>
+                    <div class="flex justify-between mb-1">
+                        <label for="rateSlider" class="text-sm font-semibold">Speed</label>
+                        <span id="rateValue" class="text-sm text-slate-500 font-mono">1.0x</span>
+                    </div>
+                    <input type="range" id="rateSlider" min="0.5" max="2.0" step="0.1" value="1.0" class="w-full accent-blue-600">
+                </div>
+
+                <!-- Pitch Slider -->
+                <div>
+                    <div class="flex justify-between mb-1">
+                        <label for="pitchSlider" class="text-sm font-semibold">Pitch</label>
+                        <span id="pitchValue" class="text-sm text-slate-500 font-mono">1.0</span>
+                    </div>
+                    <input type="range" id="pitchSlider" min="0.5" max="2.0" step="0.1" value="1.0" class="w-full accent-blue-600">
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row gap-3 pt-2">
+                <button id="btnSpeak" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-xl shadow-sm transition-colors flex justify-center items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Speak (Native)
+                </button>
+                <button id="btnStop" class="sm:flex-none bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-3 px-6 rounded-xl transition-colors flex justify-center items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"></path></svg>
+                    Stop
+                </button>
+                <button id="btnRecord" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-4 rounded-xl shadow-sm transition-colors flex justify-center items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>
+                    Record & Save
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const textInput = document.getElementById('textInput');
+        const langSelect = document.getElementById('langSelect');
+        const rateSlider = document.getElementById('rateSlider');
+        const pitchSlider = document.getElementById('pitchSlider');
+        const rateValue = document.getElementById('rateValue');
+        const pitchValue = document.getElementById('pitchValue');
+        const btnSpeak = document.getElementById('btnSpeak');
+        const btnStop = document.getElementById('btnStop');
+        const btnRecord = document.getElementById('btnRecord');
+        const errorBox = document.getElementById('errorBox');
+        const errorMessage = document.getElementById('errorMessage');
+        const infoBox = document.getElementById('infoBox');
+        const infoMessage = document.getElementById('infoMessage');
+
+        // State
+        let availableVoices = [];
+        let isRecordingProcess = false;
+
+        // Initialize Voices
+        const populateVoices = () => {
+            availableVoices = speechSynthesis.getVoices();
+        };
+        populateVoices();
+        if (speechSynthesis.onvoiceschanged !== undefined) {
+            speechSynthesis.onvoiceschanged = populateVoices;
+        }
+
+        // Update Slider Labels
+        rateSlider.addEventListener('input', (e) => rateValue.textContent = `${parseFloat(e.target.value).toFixed(1)}x`);
+        pitchSlider.addEventListener('input', (e) => pitchValue.textContent = parseFloat(e.target.value).toFixed(1));
+
+        // UI Helpers
+        const showError = (msg) => {
+            errorMessage.textContent = msg;
+            errorBox.classList.remove('hidden');
+            setTimeout(() => errorBox.classList.add('hidden'), 8000);
+        };
+        const showInfo = (msg) => {
+            infoMessage.textContent = msg;
+            infoBox.classList.remove('hidden');
+            setTimeout(() => infoBox.classList.add('hidden'), 5000);
+        };
+
+        // Voice Matching Logic
+        function getBestVoice(targetLang) {
+            if (!availableVoices.length) return null;
+            
+            // Exact match
+            let match = availableVoices.find(v => v.lang === targetLang || v.lang.replace('_', '-') === targetLang);
+            if (match) return match;
+            
+            // Fallback: match base language (e.g., 'zh' for 'zh-HK')
+            const baseLang = targetLang.split('-')[0];
+            match = availableVoices.find(v => v.lang.startsWith(baseLang));
+            return match || availableVoices[0];
+        }
+
+        // Core Speak Function
+        function speakText(recorder = null) {
+            speechSynthesis.cancel();
+            
+            const text = textInput.value.trim();
+            if (!text) {
+                showError("Please enter some text to speak.");
+                if (recorder) recorder.stop();
+                return;
+            }
+
+            const utterance = new SpeechSynthesisUtterance(text);
+            const targetLang = langSelect.value;
+            
+            const selectedVoice = getBestVoice(targetLang);
+            if (selectedVoice) utterance.voice = selectedVoice;
+            
+            utterance.lang = targetLang;
+            utterance.rate = parseFloat(rateSlider.value);
+            utterance.pitch = parseFloat(pitchSlider.value);
+
+            // Handle recording lifecycle
+            if (recorder) {
+                utterance.onend = () => {
+                    if (recorder.state !== 'inactive') recorder.stop();
+                };
+                utterance.onerror = (e) => {
+                    console.error("SpeechSynthesis Error:", e);
+                    if (recorder.state !== 'inactive') recorder.stop();
+                    showError("Speech synthesis interrupted or failed.");
+                };
+            }
+
+            speechSynthesis.speak(utterance);
+        }
+
+        // Button Listeners
+        btnSpeak.addEventListener('click', () => speakText(null));
+        
+        btnStop.addEventListener('click', () => {
+            speechSynthesis.cancel();
+            if (isRecordingProcess) {
+                showInfo("Recording forcefully stopped.");
+            }
+        });
+
+        // Record & Save Logic
+        btnRecord.addEventListener('click', async () => {
+            if (isRecordingProcess) return;
+            
+            try {
+                isRecordingProcess = true;
+                showInfo("Please select 'Share this tab' and ensure 'Share audio' is toggled ON.");
+
+                // Request display media (screen capture) to capture system/tab audio
+                const stream = await navigator.mediaDevices.getDisplayMedia({
+                    video: true, // Browsers require video parameter to show the picker
+                    audio: true
+                });
+
+                const audioTracks = stream.getAudioTracks();
+                if (audioTracks.length === 0) {
+                    stream.getTracks().forEach(track => track.stop());
+                    throw new Error("No audio track found. You must check 'Share audio' in the permissions dialog.");
+                }
+
+                showInfo("Recording started... Audio will download automatically when speech finishes.");
+
+                // Create a new stream containing only the audio track to avoid recording video
+                const audioStream = new MediaStream([audioTracks[0]]);
+                
+                // Determine supported mime type
+                const mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' 
+                               : MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4' 
+                               : '';
+                               
+                const mediaRecorder = new MediaRecorder(audioStream, { mimeType });
+                const chunks = [];
+
+                mediaRecorder.ondataavailable = (e) => {
+                    if (e.data.size > 0) chunks.push(e.data);
+                };
+
+                mediaRecorder.onstop = () => {
+                    isRecordingProcess = false;
+                    
+                    // Stop all tracks (closes the browser sharing indicator)
+                    stream.getTracks().forEach(track => track.stop());
+                    audioStream.getTracks().forEach(track => track.stop());
+
+                    if (chunks.length === 0) {
+                        showError("Failed to capture audio data.");
+                        return;
+                    }
+
+                    // Generate Blob and trigger download
+                    const blob = new Blob(chunks, { type: mimeType || 'audio/webm' });
+                    const url = URL.createObjectURL(blob);
+                    const ext = mimeType.includes('mp4') ? 'mp4' : 'webm';
+                    
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = url;
+                    a.download = `tts-recording-${Date.now()}.${ext}`;
+                    document.body.appendChild(a);
+                    a.click();
+                    
+                    setTimeout(() => {
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                    }, 100);
+                    
+                    showInfo("Audio saved successfully!");
+                };
+
+                // Start recording and immediately trigger speech synthesis
+                mediaRecorder.start();
+                speakText(mediaRecorder);
+
+            } catch (err) {
+                isRecordingProcess = false;
+                console.error("Recording setup failed:", err);
+                if (err.name === 'NotAllowedError') {
+                    showError("Permission denied. Screen/Audio sharing is required to record the file natively.");
+                } else {
+                    showError(err.message || "An error occurred while attempting to record.");
+                }
+            }
+        });
+    </script>
+</body>
+</html>
