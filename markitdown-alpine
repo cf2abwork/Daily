@@ -1,0 +1,44 @@
+# Use the official Alpine Linux image
+FROM alpine:latest
+
+# Update package index and install a package (e.g., curl or python)
+RUN apk update && apk add --no-cache \
+    python3 \
+    py3-pip \
+    build-base \
+    libffi-dev \
+    libxml2-dev \
+    libxslt-dev
+	
+	
+# Install Microsoft MarkItDown with all optional file format support (PDF, DOCX, XLSX, etc.)
+RUN pip install --no-cache-dir --break-system-packages 'markitdown[all]'	
+	
+# Set the working directory inside the container
+WORKDIR /app
+
+# Copy local files into the container
+COPY . /app
+
+
+# Install Microsoft MarkItDown with all optional file format support (PDF, DOCX, XLSX, etc.)
+RUN pip install --no-cache-dir --break-system-packages 'markitdown[all]'
+
+
+# Default command displays usage
+CMD ["markitdown", "--help"]
+
+
+# Define the default command to run when the container starts
+CMD ["python3", "-c", "print('Hello from Alpine Linux!')"]
+
+# Build
+# docker build -t my-alpine-app .
+# docker run -d -v C:\Temp\share:/opt --name my-alpine-app my-alpine-app:latest
+# docker run --rm -v C:\Temp\share:/opt my-alpine-app python3 -c "with open('/opt/hello.txt', 'w') as f: f.write('Hello from Python inside Alpine container!')"
+
+
+
+# docker build -t markitdown-alpine .
+# docker run --rm -v C:\Temp\share:/opt markitdown-alpine markitdown /opt/a.pdf -o /opt/a.md
+
